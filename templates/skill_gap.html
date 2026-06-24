@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Skill Gap Analyzer | AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<nav><div class="logo">AI Placement Assistant</div><div><a href="/dashboard">Home</a><a href="/ai">AI Interview</a><a href="/skill-gap">Skill Gap</a><a href="/logout">Logout</a></div></nav>
+<div class="container">
+    <h1>🧠 Skill Gap Analyzer</h1>
+    <div class="card">
+        <form method="POST">
+            <label>Target Role</label>
+            <input type="text" name="role" placeholder="e.g. Python Developer" required>
+            <label>Your Current Skills (Comma separated )</label>
+            <textarea name="skills" placeholder="e.g. HTML, CSS, Basic Python" rows="4"></textarea>
+            <button type="submit">🔍 Analyze My Skills</button>
+        </form>
+    </div>
+    {% if analysis %}
+    <div class="card">
+        <h2 style="color: #38bdf8;">Analysis for {{ role.title() }}</h2>
+        <div id="analysis-content"></div>
+        <script>document.getElementById('analysis-content').innerHTML = marked.parse({{ analysis|tojson }});</script>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>JD Matcher | AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<nav><div class="logo">AI Placement Assistant</div><div><a href="/dashboard">Home</a><a href="/jd-matcher">JD Matcher</a><a href="/logout">Logout</a></div></nav>
+<div class="container">
+    <h1>💼 Job Description Matcher</h1>
+    <div class="card">
+        <form method="POST">
+            <label>Paste Job Description</label>
+            <textarea name="jd" rows="6" placeholder="Paste the job description here..." required></textarea>
+            <label style="margin-top: 15px; display: block;">Your Skills</label>
+            <input type="text" name="skills" placeholder="e.g. Python, SQL, React" required>
+            <button type="submit">🎯 Check Match Percentage</button>
+        </form>
+    </div>
+    {% if analysis %}
+    <div class="card">
+        <h2 style="color: #38bdf8;">Match Analysis</h2>
+        <div id="analysis-content"></div>
+        <script>document.getElementById('analysis-content' ).innerHTML = marked.parse({{ analysis|tojson }});</script>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

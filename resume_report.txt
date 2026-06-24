@@ -1,0 +1,10 @@
+
+ATS SCORE: 60/100
+
+SKILLS FOUND:
+python, java, html, css, ai, ml
+
+IMPROVEMENTS:
+- Add more projects
+- Improve formatting
+- Add GitHub links

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Placement Readiness | AI</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<nav><div class="logo">AI Placement Assistant</div><div><a href="/dashboard">Home</a><a href="/readiness">Readiness</a><a href="/logout">Logout</a></div></nav>
+<div class="container">
+    <h1>📊 Placement Readiness Score</h1>
+    <div class="card">
+        <form method="POST">
+            <label>Resume Score (0-100 )</label>
+            <input type="number" name="resume_score" min="0" max="100" required>
+            <label>Aptitude Score (0-100)</label>
+            <input type="number" name="aptitude_score" min="0" max="100" required>
+            <label>Interview Score (0-100)</label>
+            <input type="number" name="interview_score" min="0" max="100" required>
+            <button type="submit">📈 Calculate Readiness</button>
+        </form>
+    </div>
+    {% if score_data %}
+    <div class="card">
+        <h2 style="color: #38bdf8;">Your Readiness Report</h2>
+        <div id="score-content"></div>
+        <script>document.getElementById('score-content').innerHTML = marked.parse({{ score_data|tojson }});</script>
+        <button onclick="window.print()" style="margin-top: 20px; background: #22c55e;">📥 Download Report (Print to PDF)</button>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

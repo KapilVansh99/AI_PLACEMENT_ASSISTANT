@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galactic Dashboard | AI Placement Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+    <div class="logo">ASTRA AI</div>
+    <div>
+        <a href="/dashboard">Home</a>
+        <a href="/ai">Interview</a>
+        <a href="/resume">Resume</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 style="margin-top: 50px;">COMMAND CENTER</h1>
+    <p>Welcome, Commander. Navigate the career cosmos with AI precision.</p>
+
+    <div class="grid">
+        <!-- 1. AI Interview Assistant -->
+        <a href="/ai" class="feature-card">
+            <h3>🤖 Interview Prep</h3>
+            <p>Generate 20+ role-based interview questions instantly.</p>
+        </a>
+
+        <!-- 2. Career Roadmap -->
+        <a href="/roadmap" class="feature-card">
+            <h3>🎯 Career Roadmap</h3>
+            <p>Personalized step-by-step galactic learning path.</p>
+        </a>
+
+        <!-- 3. Skill Gap Analyzer -->
+        <a href="/skill-gap" class="feature-card">
+            <h3>🧠 Skill Gap</h3>
+            <p>Analyze the cosmic gap in your professional profile.</p>
+        </a>
+
+        <!-- 4. Resume Analyzer -->
+        <a href="/resume" class="feature-card">
+            <h3>📄 Resume Analysis</h3>
+            <p>AI-powered ATS score and feedback for your CV.</p>
+        </a>
+
+        <!-- 5. JD Matcher -->
+        <a href="/jd-matcher" class="feature-card">
+            <h3>💼 JD Matcher</h3>
+            <p>Match your trajectory with any job description.</p>
+        </a>
+
+        <!-- 6. Aptitude Test -->
+        <a href="/aptitude" class="feature-card">
+            <h3>🧩 Aptitude Test</h3>
+            <p>Practice with AI-generated logical challenges.</p>
+        </a>
+
+        <!-- 7. Coding Quiz -->
+        <a href="/coding-quiz" class="feature-card">
+            <h3>💻 Coding Quiz</h3>
+            <p>Debug your skills with language-specific quizzes.</p>
+        </a>
+
+        <!-- 8. Placement Readiness -->
+        <a href="/readiness" class="feature-card">
+            <h3>📈 Readiness Score</h3>
+            <p>Final mission assessment for your placement success.</p>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

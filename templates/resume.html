@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>AI Resume Analyzer | Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<nav><div class="logo">AI Placement Assistant</div><div><a href="/dashboard">Home</a><a href="/ai">AI Interview</a><a href="/resume">Resume</a><a href="/logout">Logout</a></div></nav>
+<div class="container">
+    <h1>📄 AI Resume Analyzer</h1>
+    <p style="text-align: center; color: #94a3b8;">Upload your PDF resume to get an AI-powered ATS score and feedback.</p>
+
+    <div class="card">
+        <form method="POST" enctype="multipart/form-data">
+            <label>Target Job Role</label>
+            <input type="text" name="role" placeholder="e.g. Data Analyst" required>
+            
+            <label style="margin-top: 20px; display: block;">Upload Resume (PDF only )</label>
+            <input type="file" name="resume" accept=".pdf" required>
+            
+            <button type="submit">🚀 Analyze Resume</button>
+        </form>
+    </div>
+
+    {% if analysis %}
+    <div class="card">
+        <h2 style="color: #38bdf8;">Analysis Results</h2>
+        <div id="analysis-content"></div>
+        <script>document.getElementById('analysis-content').innerHTML = marked.parse({{ analysis|tojson }});</script>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

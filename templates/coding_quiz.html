@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>AI Coding Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<nav><div class="logo">AI Placement Assistant</div><div><a href="/dashboard">Home</a><a href="/coding-quiz">Coding Quiz</a><a href="/logout">Logout</a></div></nav>
+<div class="container">
+    <h1>💻 AI Coding Quiz</h1>
+    <div class="card">
+        <form method="POST">
+            <label>Programming Language</label>
+            <select name="lang">
+                <option value="Python">Python</option>
+                <option value="Java">Java</option>
+                <option value="JavaScript">JavaScript</option>
+                <option value="C++">C++</option>
+            </select>
+            <button type="submit">🚀 Start Coding Quiz</button>
+        </form>
+    </div>
+    {% if quiz_text %}
+    <div class="card">
+        <div id="quiz-content"></div>
+        <script>document.getElementById('quiz-content' ).innerHTML = marked.parse({{ quiz_text|tojson }});</script>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

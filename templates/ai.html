@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Assistant | Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav>
+    <div class="logo">AI Placement Assistant</div>
+    <div>
+        <a href="/dashboard">Home</a>
+        <a href="/ai">AI Interview</a>
+        <a href="/resume">Resume</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>🤖 AI Interview Assistant</h1>
+    <p style="text-align: center; color: #94a3b8;">Generate 20 professional interview questions using Llama 3 AI</p>
+
+    <div class="card">
+        <form method="POST">
+            <label for="role">Select Your Target Profession</label>
+            <select name="role" id="role" required>
+                <option value="" disabled selected>-- Choose a role --</option>
+                <option value="data analyst">Data Analyst</option>
+                <option value="python developer">Python Developer</option>
+                <option value="web developer">Web Developer</option>
+                <option value="software engineer">Software Engineer</option>
+                <option value="machine learning engineer">ML Engineer</option>
+            </select>
+            <button type="submit">✨ Generate AI Questions</button>
+        </form>
+    </div>
+
+    {% if result %}
+        <div class="result-tag">{{ result }}</div>
+    {% endif %}
+
+    {% if questions %}
+    <div class="card" style="margin-top: 20px;">
+        <h2 style="color: #38bdf8; margin-bottom: 20px;">📊 Interview Questions</h2>
+        {% for q in questions %}
+            <div class="question-item">
+                <strong>{{ loop.index }}.</strong> {{ q }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>

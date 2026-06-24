@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Certification Recommender</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <div><b>AI Placement Assistant</b></div>
+
+    <div>
+        <a href="/dashboard">Home</a>
+        <a href="/ai">AI Interview</a>
+        <a href="/resume">Resume</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<!-- MAIN CONTAINER -->
+<div class="container">
+
+    <h1>🏆 Certification Recommender</h1>
+    <p>Get AI-powered certification suggestions based on your career goal</p>
+
+    <!-- INPUT CARD -->
+    <div class="card">
+
+        <form method="POST">
+
+            <label>Select Your Career Role</label>
+            <br><br>
+
+            <select name="role">
+                <option>Data Analyst</option>
+                <option>AI Engineer</option>
+                <option>Web Developer</option>
+                <option>Python Developer</option>
+            </select>
+
+            <br><br>
+
+            <button type="submit">Get Recommendations</button>
+
+        </form>
+
+    </div>
+
+    <!-- RESULT CARD -->
+    {% if result %}
+    <div class="card">
+        <h2>📊 Recommended Certifications</h2>
+        <pre>{{ result }}</pre>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

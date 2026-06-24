@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<title>My Profile</title>
+
+<style>
+
+body{
+    font-family:Arial,sans-serif;
+    background:#0f172a;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.profile-card{
+    background:#1e293b;
+    padding:40px;
+    border-radius:20px;
+    width:500px;
+    text-align:center;
+    box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+.avatar{
+    font-size:70px;
+}
+
+h2{
+    margin-top:10px;
+}
+
+.info{
+    margin-top:25px;
+    text-align:left;
+}
+
+.info p{
+    font-size:18px;
+    padding:8px 0;
+}
+
+.btn{
+    display:inline-block;
+    margin-top:20px;
+    padding:12px 20px;
+    background:#2563eb;
+    color:white;
+    text-decoration:none;
+    border-radius:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="profile-card">
+
+<div class="avatar">👤</div>
+
+<h2>{{ name }}</h2>
+
+<div class="info">
+
+<p><b>Email:</b> {{ email }}</p>
+
+<p><b>Role:</b> Aspiring Software Engineer</p>
+
+<p><b>Platform:</b> AI Placement Assistant</p>
+
+<p><b>Status:</b> Active User ✅</p>
+
+</div>
+
+<a href="/dashboard" class="btn">
+⬅ Back to Dashboard
+</a>
+
+</div>
+
+</body>
+</html>
