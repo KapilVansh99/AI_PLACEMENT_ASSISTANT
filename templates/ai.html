@@ -3,8 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Interview Assistant | Pro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>AI Voice Interview Assistant | Pro</title>
+    <link rel="stylesheet" href="{{ url_for("static", filename="style.css") }}">
+    <style>
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .voice-btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .voice-btn.mic {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .voice-btn.mic:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .voice-btn.mic.recording {
+            animation: pulse 0.6s infinite;
+            background: linear-gradient(135deg, #ff4757, #ff3838);
+        }
+
+        .voice-btn.speaker {
+            background: linear-gradient(135deg, #00d2d3, #00b8a9);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 210, 211, 0.4);
+        }
+
+        .voice-btn.speaker:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 210, 211, 0.6);
+        }
+
+        .voice-btn.speaker:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .voice-status {
+            text-align: center;
+            color: #38bdf8;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 20px;
+        }
+
+        .transcribed-text {
+            background: rgba(56, 189, 248, 0.1);
+            border-left: 4px solid #38bdf8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #e2e8f0;
+        }
+
+        .ai-voice-response {
+            background: rgba(0, 210, 211, 0.1);
+            border-left: 4px solid #00d2d3;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            color: #e2e8f0;
+        }
+
+        .interview-mode-toggle {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .question-with-voice {
+            background: rgba(102, 126, 234, 0.1);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+    </style>
 </head>
 <body>
 
@@ -19,11 +137,17 @@
 </nav>
 
 <div class="container">
-    <h1>🤖 AI Interview Assistant</h1>
-    <p style="text-align: center; color: #94a3b8;">Generate 20 professional interview questions using Llama 3 AI</p>
+    <h1>🤖 AI Voice Interview Assistant</h1>
+    <p style="text-align: center; color: #94a3b8;">Generate 20 professional interview questions using Llama 3 AI + Voice Mode</p>
+
+    <!-- Interview Mode Toggle -->
+    <div class="interview-mode-toggle">
+        <label style="color: #e2e8f0; margin-right: 10px;">Interview Mode:</label>
+        <button class="toggle-btn" id="modeToggle">🎤 Enable Voice Mode</button>
+    </div>
 
     <div class="card">
-        <form method="POST">
+        <form method="POST" id="interviewForm">
             <label for="role">Select Your Target Profession</label>
             <select name="role" id="role" required>
                 <option value="" disabled selected>-- Choose a role --</option>
@@ -44,14 +168,237 @@
     {% if questions %}
     <div class="card" style="margin-top: 20px;">
         <h2 style="color: #38bdf8; margin-bottom: 20px;">📊 Interview Questions</h2>
-        {% for q in questions %}
-            <div class="question-item">
-                <strong>{{ loop.index }}.</strong> {{ q }}
+        
+        <div id="voiceModeContainer" style="display: none;">
+            <div class="question-with-voice">
+                <h3 id="currentQuestion" style="color: #00d2d3; margin-bottom: 15px;">Question 1 of {{ questions|length }}</h3>
+                
+                <div class="voice-controls">
+                    <button type="button" class="voice-btn mic" id="recordBtn">
+                        🎤 Start Recording
+                    </button>
+                    <button type="button" class="voice-btn speaker" id="speakQuestionBtn">
+                        🔊 Hear Question
+                    </button>
+                </div>
+
+                <div class="voice-status" id="voiceStatus"></div>
+
+                <div id="transcribedContainer" style="display: none;">
+                    <p style="color: #94a3b8; margin-top: 10px;">Your Answer:</p>
+                    <div class="transcribed-text" id="transcribedText"></div>
+                </div>
+
+                <div id="aiResponseContainer" style="display: none;">
+                    <p style="color: #94a3b8; margin-top: 10px;">AI Feedback:</p>
+                    <div class="ai-voice-response" id="aiResponse"></div>
+                    <button type="button" class="voice-btn speaker" id="speakFeedbackBtn">
+                        🔊 Hear Feedback
+                    </button>
+                </div>
+
+                <div class="voice-controls" style="margin-top: 20px;">
+                    <button type="button" class="voice-btn" id="nextQuestionBtn" style="background: linear-gradient(135deg, #38bdf8, #0ea5e9); color: white;">
+                        ➡️ Next Question
+                    </button>
+                    <button type="button" class="voice-btn" id="prevQuestionBtn" style="background: linear-gradient(135deg, #94a3b8, #64748b); color: white;">
+                        ⬅️ Previous Question
+                    </button>
+                </div>
             </div>
-        {% endfor %}
+        </div>
+
+        <div id="textModeContainer">
+            {% for q in questions %}
+                <div class="question-item">
+                    <strong>{{ loop.index }}.</strong> {{ q }}
+                </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 </div>
+
+<script>
+    // Speech Recognition Setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    // Speech Synthesis Setup
+    const synth = window.speechSynthesis;
+
+    // Variables
+    let isRecording = false;
+    let voiceMode = false;
+    let currentQuestionIndex = 0;
+    let questions = {{ questions|tojson }};
+    let transcribedAnswer = '';
+    let aiResponse = '';
+
+    // DOM Elements
+    const modeToggle = document.getElementById('modeToggle');
+    const recordBtn = document.getElementById('recordBtn');
+    const speakQuestionBtn = document.getElementById('speakQuestionBtn');
+    const speakFeedbackBtn = document.getElementById('speakFeedbackBtn');
+    const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+    const prevQuestionBtn = document.getElementById('prevQuestionBtn');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const currentQuestionDisplay = document.getElementById('currentQuestion');
+    const transcribedContainer = document.getElementById('transcribedContainer');
+    const transcribedText = document.getElementById('transcribedText');
+    const aiResponseContainer = document.getElementById('aiResponseContainer');
+    const aiResponseDisplay = document.getElementById('aiResponse');
+    const voiceModeContainer = document.getElementById('voiceModeContainer');
+    const textModeContainer = document.getElementById('textModeContainer');
+
+    // Toggle Voice Mode
+    modeToggle.addEventListener('click', () => {
+        voiceMode = !voiceMode;
+        if (voiceMode) {
+            modeToggle.textContent = '✅ Voice Mode Active';
+            modeToggle.style.background = 'linear-gradient(135deg, #00d2d3, #00b8a9)';
+            voiceModeContainer.style.display = 'block';
+            textModeContainer.style.display = 'none';
+            currentQuestionIndex = 0;
+            updateQuestionDisplay();
+        } else {
+            modeToggle.textContent = '🎤 Enable Voice Mode';
+            modeToggle.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            voiceModeContainer.style.display = 'none';
+            textModeContainer.style.display = 'block';
+            resetVoiceState();
+        }
+    });
+
+    // Record Button
+    recordBtn.addEventListener('click', () => {
+        if (!isRecording) {
+            isRecording = true;
+            recordBtn.textContent = '⏹️ Stop Recording';
+            recordBtn.classList.add('recording');
+            voiceStatus.textContent = '🎤 Listening...';
+            transcribedContainer.style.display = 'none';
+            aiResponseContainer.style.display = 'none';
+            recognition.start();
+        } else {
+            isRecording = false;
+            recordBtn.textContent = '🎤 Start Recording';
+            recordBtn.classList.remove('recording');
+            voiceStatus.textContent = '⏳ Processing...';
+            recognition.stop();
+        }
+    });
+
+    // Speech Recognition Events
+    recognition.addEventListener('result', (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+        }
+        transcribedAnswer = transcript;
+        transcribedText.textContent = transcribedAnswer;
+        transcribedContainer.style.display = 'block';
+    });
+
+    recognition.addEventListener('end', () => {
+        if (isRecording) {
+            isRecording = false;
+            recordBtn.textContent = '🎤 Start Recording';
+            recordBtn.classList.remove('recording');
+            voiceStatus.textContent = '✅ Recording complete! Sending to AI...';
+            
+            // Send to backend for AI feedback
+            if (transcribedAnswer.trim()) {
+                sendAnswerToAI(transcribedAnswer);
+            }
+        }
+    });
+
+    // Send Answer to AI
+    function sendAnswerToAI(answer) {
+        const role = document.getElementById('role').value;
+        const question = questions[currentQuestionIndex];
+
+        fetch('/voice-feedback', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                role: role,
+                question: question,
+                answer: answer
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            aiResponse = data.feedback;
+            aiResponseDisplay.textContent = aiResponse;
+            aiResponseContainer.style.display = 'block';
+            voiceStatus.textContent = '✅ AI Feedback Ready!';
+        })
+        .catch(error => {
+            voiceStatus.textContent = '❌ Error getting AI feedback';
+            console.error('Error:', error);
+        });
+    }
+
+    // Speak Question
+    speakQuestionBtn.addEventListener('click', () => {
+        const question = questions[currentQuestionIndex];
+        const utterance = new SpeechSynthesisUtterance(question);
+        utterance.rate = 0.9;
+        synth.speak(utterance);
+    });
+
+    // Speak Feedback
+    speakFeedbackBtn.addEventListener('click', () => {
+        if (aiResponse) {
+            const utterance = new SpeechSynthesisUtterance(aiResponse);
+            utterance.rate = 0.9;
+            synth.speak(utterance);
+        }
+    });
+
+    // Next Question
+    nextQuestionBtn.addEventListener('click', () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            resetVoiceState();
+            updateQuestionDisplay();
+        } else {
+            voiceStatus.textContent = '🎉 All questions completed!';
+        }
+    });
+
+    // Previous Question
+    prevQuestionBtn.addEventListener('click', () => {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            resetVoiceState();
+            updateQuestionDisplay();
+        }
+    });
+
+    // Update Question Display
+    function updateQuestionDisplay() {
+        currentQuestionDisplay.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}: ${questions[currentQuestionIndex]}`;
+    }
+
+    // Reset Voice State
+    function resetVoiceState() {
+        transcribedAnswer = '';
+        aiResponse = '';
+        transcribedContainer.style.display = 'none';
+        aiResponseContainer.style.display = 'none';
+        voiceStatus.textContent = '';
+        recordBtn.textContent = '🎤 Start Recording';
+        recordBtn.classList.remove('recording');
+    }
+</script>
 
 </body>
 </html>
