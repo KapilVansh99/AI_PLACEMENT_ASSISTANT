@@ -2,7 +2,10 @@ import os
 import random
 import io
 import PyPDF2
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -10,8 +13,68 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "a_very_secret_key_that_should_be_in_env") # Replace with a strong secret key
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 
 # --- AI Provider Class (Flexible Architecture) ---
+class User(UserMixin):
+    def __init__(self, id, email, password):
+        self.id = id
+        self.email = email
+        self.password = password
+
+    @staticmethod
+    def get(user_id):
+        conn = get_db_connection()
+        user_data = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        conn.close()
+        if user_data:
+            return User(user_data["id"], user_data["email"], user_data["password"])
+        return None
+
+    @staticmethod
+    def get_by_email(email):
+        conn = get_db_connection()
+        user_data = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        conn.close()
+        if user_data:
+            return User(user_data["id"], user_data["email"], user_data["password"])
+        return None
+
+    def get_id(self):
+        return str(self.id)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
+def get_db_connection():
+    conn = sqlite3.connect("users.db")
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db_connection()
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        );
+        """
+    )
+    conn.commit()
+    conn.close()
+
+# Initialize the database when the app starts
+with app.app_context():
+    init_db()
+
+
 class AIProvider:
     def __init__(self, api_type="groq"):
         self.api_type = api_type
@@ -74,7 +137,7 @@ fallback_questions = {
     "python developer": [
         "Explain the difference between a list and a tuple in Python.",
         "What is a decorator in Python? Provide an example.",
-        "How does Python\'s garbage collection work?",
+        "How does Python's garbage collection work?",
         "What is the GIL (Global Interpreter Lock) in Python?",
         "Explain inheritance and polymorphism in Python with examples.",
         "What are generators and iterators in Python?",
@@ -133,7 +196,7 @@ fallback_questions = {
         "If a circle has a radius of 7 cm, what is its circumference?",
         "What is the square root of 144?",
         "A mixture of 20 liters of milk and water contains 10% water. How much more water should be added to make the water content 25%?",
-        "What is the value of \'x\' if 2x + 5 = 15?",
+        "What is the value of 'x' if 2x + 5 = 15?",
         "If all dogs are animals and all animals have four legs, then all dogs have four legs. Is this statement logically sound?",
         "What is the capital of France?"
     ],
@@ -162,12 +225,63 @@ fallback_questions = {
 }
 
 # --- Flask Routes ---
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        conn = get_db_connection()
+        existing_user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        conn.close()
+
+        if existing_user:
+            flash("Email already registered. Please log in.", "error")
+            return redirect(url_for("login"))
+
+        hashed_password = generate_password_hash(password, method="pbkdf2:sha256")
+
+        conn = get_db_connection()
+        conn.execute("INSERT INTO users (email, password) VALUES (?, ?)", (email, hashed_password))
+        conn.commit()
+        conn.close()
+
+        flash("Account created successfully! Please log in.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("signup.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        user = User.get_by_email(email)
+
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash("Logged in successfully!", "success")
+            return redirect(url_for("dashboard"))
+        else:
+            flash("Invalid email or password.", "error")
+
+    return render_template("login.html")
+
 @app.route("/")
 @app.route("/dashboard")
+@login_required
 def dashboard():
     return render_template("dashboard.html")
 
 @app.route("/ai", methods=["GET", "POST"])
+@login_required
 def ai():
     questions = []
     result = ""
@@ -194,6 +308,7 @@ def ai():
 
 # 2. Career Roadmap Generator
 @app.route("/roadmap", methods=["GET", "POST"])
+@login_required
 def roadmap():
     roadmap_data = ""
     role = ""
@@ -212,6 +327,7 @@ def roadmap():
 
 # 3. Skill Gap Analyzer
 @app.route("/skill-gap", methods=["GET", "POST"])
+@login_required
 def skill_gap():
     analysis = ""
     role = ""
@@ -219,7 +335,7 @@ def skill_gap():
     if request.method == "POST":
         role = request.form.get("role", "").strip()
         skills = request.form.get("skills", "").strip()
-        system_p = "You are a Skill Gap Analyst. Compare the user\'s current skills with the requirements for the target role. Identify missing skills and suggest resources to bridge the gap. Use Markdown."
+        system_p = "You are a Skill Gap Analyst. Compare the user's current skills with the requirements for the target role. Identify missing skills and suggest resources to bridge the gap. Use Markdown."
         user_p = f"Target Role: {role}\nMy Current Skills: {skills}"
         
         ai_response = ai_assistant.generate(system_p, user_p)
@@ -232,6 +348,7 @@ def skill_gap():
 
 # 4. Resume Analyzer
 @app.route("/resume", methods=["GET", "POST"])
+@login_required
 def resume():
     analysis = ""
     if request.method == "POST":
@@ -253,13 +370,14 @@ def resume():
                     analysis = "AI failed to analyze resume. Please try again."
             except Exception as e:
                 print(f"Resume Error: {e}")
-                analysis = "Error reading PDF. Make sure it\'s a valid PDF file."
+                analysis = "Error reading PDF. Make sure it's a valid PDF file."
         else:
             analysis = "Please provide both a target role and a resume file."
     return render_template("resume.html", analysis=analysis)
 
 # 5. Job Description (JD) Matcher
 @app.route("/jd-matcher", methods=["GET", "POST"])
+@login_required
 def jd_matcher():
     analysis = ""
     if request.method == "POST":
@@ -269,7 +387,7 @@ def jd_matcher():
         if not jd or not skills:
             analysis = "Please provide both Job Description and your skills."
         else:
-            system_p = "You are a Technical Recruiter. Match the Job Description with the User\'s Skills. Provide a Match Percentage, Matching Skills, and Missing Skills. Use Markdown."
+            system_p = "You are a Technical Recruiter. Match the Job Description with the User's Skills. Provide a Match Percentage, Matching Skills, and Missing Skills. Use Markdown."
             user_p = f"Job Description: {jd}\n\nMy Skills: {skills}"
             ai_response = ai_assistant.generate(system_p, user_p)
             if ai_response:
@@ -280,6 +398,7 @@ def jd_matcher():
 
 # 6. AI Aptitude Test
 @app.route("/aptitude", methods=["GET", "POST"])
+@login_required
 def aptitude():
     questions = []
     if request.method == "POST":
@@ -296,6 +415,7 @@ def aptitude():
 
 # 7. AI Coding Quiz
 @app.route("/coding-quiz", methods=["GET", "POST"])
+@login_required
 def coding_quiz():
     quiz_text = ""
     if request.method == "POST":
@@ -313,6 +433,7 @@ def coding_quiz():
 
 # 8. Placement Readiness Score
 @app.route("/readiness", methods=["GET", "POST"])
+@login_required
 def readiness():
     score_data = ""
     if request.method == "POST":
@@ -341,8 +462,8 @@ def voice_feedback():
     if not all([role, question, answer]):
         return jsonify({"feedback": "Please provide role, question, and answer."}), 400
     
-    system_p = f"You are an Expert Interview Coach for {role} positions. Evaluate the candidate\'s answer to the interview question. Provide: 1) Score (0-10), 2) Strengths, 3) Areas for improvement, 4) Suggested better answer. Keep it concise and encouraging. Use Markdown."
-    user_p = f"Interview Question: {question}\n\nCandidate\'s Answer: {answer}"
+    system_p = f"You are an Expert Interview Coach for {role} positions. Evaluate the candidate's answer to the interview question. Provide: 1) Score (0-10), 2) Strengths, 3) Areas for improvement, 4) Suggested better answer. Keep it concise and encouraging. Use Markdown."
+    user_p = f"Interview Question: {question}\n\nCandidate's Answer: {answer}"
     
     ai_response = ai_assistant.generate(system_p, user_p)
     if ai_response:
@@ -353,8 +474,11 @@ def voice_feedback():
     return jsonify({"feedback": feedback})
 
 @app.route("/logout")
+@login_required
 def logout():
-    return "Logged out successfully!"
+    logout_user()
+    flash("You have been logged out successfully.", "success")
+    return redirect(url_for("login"))
 
 if __name__ == "__main__":
     app.run(debug=True)
