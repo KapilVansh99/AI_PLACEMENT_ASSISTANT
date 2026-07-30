@@ -430,23 +430,46 @@
             {% endwith %}
 
             <form method="POST">
-                <div class="form-group">
-    <label for="confirm_password">Confirm Password*</label>
-    <input type="password"
-           id="confirm_password"
-           name="confirm_password"
-           placeholder="Confirm your password"
-           required>
-</div>
 
-                <div class="terms-checkbox">
-                    <input type="checkbox" id="terms" required>
-                    <label for="terms" style="margin: 0;">
-                        I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                    </label>
-                </div>
+    <div class="form-group">
+        <label for="email">Email*</label>
+        <input type="email"
+               id="email"
+               name="email"
+               placeholder="Enter Your Email..."
+               required>
+    </div>
 
-                <button type="submit" class="submit-btn">Create Account</button>
+    <div class="form-group">
+        <label for="password">Password*</label>
+        <input type="password"
+               id="password"
+               name="password"
+               placeholder="Create a strong password"
+               required>
+        <div class="password-hint">💡 Use at least 8 characters for security</div>
+    </div>
+
+    <div class="form-group">
+        <label for="confirm_password">Confirm Password*</label>
+        <input type="password"
+               id="confirm_password"
+               name="confirm_password"
+               placeholder="Confirm your password"
+               required>
+    </div>
+
+    <div class="terms-checkbox">
+        <input type="checkbox" id="terms" required>
+        <label for="terms" style="margin: 0;">
+            I agree to the <a href="#">Terms of Service</a> and
+            <a href="#">Privacy Policy</a>
+        </label>
+    </div>
+
+    <button type="submit" class="submit-btn">Create Account</button>
+
+</form>
             </form>
 
             <div class="divider">
