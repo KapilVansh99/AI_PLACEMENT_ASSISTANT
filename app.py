@@ -60,20 +60,26 @@ with app.app_context():
 class AIProvider:
     def __init__(self, api_key):
         self.client = Groq(api_key=api_key)
-        self.model = "llama-3.1-70b-versatile"
+        self.model = "llama-3.3-70b-versatile"
 
     def generate(self, prompt, context=""):
         try:
             full_prompt = f"{context}\n{prompt}" if context else prompt
+
             message = self.client.chat.completions.create(
-                messages=[{"role": "user", "content": full_prompt}],
+                messages=[
+                    {"role": "user", "content": full_prompt}
+                ],
                 model=self.model,
                 max_tokens=1000,
             )
+
             return message.choices[0].message.content
+
         except Exception as e:
             print(f"AI Error: {e}")
             return None
+
 
 # Initialize AI
 ai_assistant = AIProvider(os.environ.get("GROQ_API_KEY", ""))
